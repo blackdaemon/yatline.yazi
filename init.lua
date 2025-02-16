@@ -163,7 +163,7 @@ local function get_file_extension(file_name)
 	local extension = file_name:match("^.+%.(.+)$")
 
 	if extension == nil or extension == "" then
-		return "file"
+		return "null"
 	else
 		return extension
 	end
@@ -467,41 +467,33 @@ end
 --- @param config? TabPathConfig Configuration for getting current active tab's path
 --- @return string path Current active tab's path.
 function Yatline.string.get:tab_path(config)
-	local cwd = cx.active.current.cwd
-	local filter = cx.active.current.files.filter
+        local cwd = cx.active.current.cwd
+        local filter = cx.active.current.files.filter
 
-	local search = ""
-	if cwd.is_search then
-		search = #cwd:frag() > 0 and string.format(" (search: %s", cwd:frag()) or " (flatten"
-	end
+        local search = cwd.is_search and string.format(" (search: %s", cwd:frag()) or ""
 
-	local suffix
-	if not filter then
-		suffix = search == "" and search or search .. ")"
-	elseif search == "" then
-		suffix = string.format(" (filter: %s)", tostring(filter))
-	else
-		suffix = string.format("%s, filter: %s)", search, tostring(filter))
-	end
+        local suffix
+        if not filter then
+                suffix = search == "" and search or search .. ")"
+        elseif search == "" then
+                suffix = string.format(" (filter: %s)", tostring(filter))
+        else
+                suffix = string.format("%s, filter: %s)", search, tostring(filter))
+        end
 
-	local path = ya.readable_path(tostring(cwd))
-	if path == "" then
-		path = "/"
-	end
+        if not config then
+                return ya.readable_path(tostring(cwd)) .. suffix
+        end
 
-	if not config then
-		return path .. suffix
-	end
+        local trimed = config.trimed or false
+        local max_length = config.max_length or 24
+        local trim_length = config.trim_length or 10
 
-	local trimed = config.trimed or false
-	local max_length = config.max_length or 24
-	local trim_length = config.trim_length or 10
-
-	if trimed then
-		return trim_filename(path, max_length, trim_length) .. suffix
-	else
-		return path .. suffix
-	end
+        if trimed then
+                return trim_filename(ya.readable_path(tostring(cwd)), max_length, trim_length) .. suffix
+        else
+                return ya.readable_path(tostring(cwd)) .. suffix
+        end
 end
 
 --- Gets the mode of active tab.
@@ -716,41 +708,6 @@ function Yatline.coloreds.create(coloreds, component_type)
 	return ui.Line(spans)
 end
 
-function Yatline.coloreds.get:filter()
-	local cwd = cx.active.current.cwd
-	local filter = cx.active.current.files.filter
-
-	local search_text = "search"
-	local filter_text = "filter"
-	local no_filter_text = "no filter"
-	local flatten_text = "flatten"
-	local uppercase = false
-
-	local search = ""
-	if cwd.is_search then
-		search = #cwd:frag() > 0 and string.format("%s: %s", uppercase and string.upper(search_text) or search_text, cwd:frag()) or flatten_text
-	end
-
-	local suffix
-	if not filter then
-		suffix = search == "" and search or search
-	elseif search == "" then
-		suffix = string.format("%s: %s", uppercase and string.upper(filter_text) or filter_text, tostring(filter))
-	else
-		suffix = string.format("%s, %s: %s", search, uppercase and string.upper(filter_text) or filter_text, tostring(filter))
-	end
-
-	if suffix == "" then
-		return { { string.format("   %s ", uppercase and string.upper(no_filter_text) or no_filter_text), "white" }, } 
-	end
-	
-	local coloreds = {
-		{ string.format("   (%s) ", suffix), "brightyellow" },
-	}
-
-	return coloreds
-end
-
 --- Gets the hovered file's permissions of the current active tab.
 --- @return Coloreds coloreds Current active tab's hovered file's permissions
 function Yatline.coloreds.get:permissions()
@@ -797,7 +754,7 @@ function Yatline.coloreds.get:count()
 	local num_yanked = #cx.yanked
 	local num_selected = #cx.active.selected
 	local num_files = #cx.active.current.files
-	local is_filter = cx.active.current.files.filter or cx.active.current.cwd.is_search
+	local filter_is_on = cx.active.current.files.filter or cx.active.current.cwd.is_search
 
 	local yanked_fg, yanked_icon
 	if cx.yanked.is_cut then
@@ -808,7 +765,7 @@ function Yatline.coloreds.get:count()
 		yanked_icon = copied_icon
 	end
 	local files_count_icon = ""
-	local files_count_color = is_filter and "brightyellow" or "white"
+	local files_count_color = filter_is_on and "brightyellow" or "white"
 	
 	local coloreds = {
 		{ string.format(" %s %d ", files_count_icon, num_files), files_count_color },
