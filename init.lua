@@ -163,7 +163,7 @@ local function get_file_extension(file_name)
 	local extension = file_name:match("^.+%.(.+)$")
 
 	if extension == nil or extension == "" then
-		return "null"
+		return "file"
 	else
 		return extension
 	end
@@ -746,6 +746,41 @@ function Yatline.coloreds.get:permissions()
 	else
 		return ""
 	end
+end
+
+function Yatline.coloreds.get:filter()
+	local cwd = cx.active.current.cwd
+	local filter = cx.active.current.files.filter
+
+	local search_text = "search"
+	local filter_text = "filter"
+	local no_filter_text = "no filter"
+	local flatten_text = "flatten"
+	local uppercase = false
+
+	local search = ""
+	if cwd.is_search then
+		search = #cwd:frag() > 0 and string.format("%s: %s", uppercase and string.upper(search_text) or search_text, cwd:frag()) or flatten_text
+	end
+
+	local suffix
+	if not filter then
+		suffix = search == "" and search or search
+	elseif search == "" then
+		suffix = string.format("%s: %s", uppercase and string.upper(filter_text) or filter_text, tostring(filter))
+	else
+		suffix = string.format("%s, %s: %s", search, uppercase and string.upper(filter_text) or filter_text, tostring(filter))
+	end
+
+	if suffix == "" then
+		return { { string.format("   %s ", uppercase and string.upper(no_filter_text) or no_filter_text), "white" }, }
+	end
+
+	local coloreds = {
+		{ string.format("   (%s) ", suffix), "brightyellow" },
+	}
+
+	return coloreds
 end
 
 --- Gets the number of selected and yanked files of the active tab.
