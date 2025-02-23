@@ -77,6 +77,7 @@ Yatline = {}
 --- @field cut {icon: string, fg: Color} Configuration for the count of files that cut.
 --- @field files {icon: string, fg: Color} Configuration for the count of files in the active tab.
 --- @field filtereds {icon: string, fg: Color} Configuration for the count of files in the active tab that are filtered.
+--- @field filter {fg: Color, search_label: string, filter_label: string, no_filter_label: string, flatten_label: string} Configuration for the active search and filter component.
 --- @field total {icon: string, fg: Color} Configuration for the count of progress tasks that finished.
 --- @field success {icon: string, fg: Color} Configuration for the count of progress tasks that successed.
 --- @field failed {icon: string, fg: Color} Configuration for the count of progress tasks that failed.
@@ -119,6 +120,13 @@ Yatline.config = {
 
 	files = { icon = "", fg = "blue" },
 	filtereds = { icon = "", fg = "magenta" },
+	filter = {
+		fg = "brightyellow",
+		search_label = " search",
+		filter_label = " filter",
+		no_filter_label = "",
+		flatten_label = " flatten",
+	},
 
 	total = { icon = "󰮍", fg = "yellow" },
 	success = { icon = "", fg = "green" },
@@ -982,6 +990,31 @@ function Yatline.coloreds.get:permissions()
 	else
 		return nil
 	end
+end
+
+--- Gets the active search, filter, or flatten query as one component.
+--- Labels and color can be customized with `Yatline.config.filter`.
+--- @return Coloreds coloreds Current active tab's search and filter state.
+function Yatline.coloreds.get:filter()
+	local cwd = cx.active.current.cwd
+	local active_filter = cx.active.current.files.filter
+	local config = Yatline.config.filter
+
+	local search = ""
+	if cwd.is_search then
+		local domain = tostring(cwd.domain or "")
+		search = domain ~= "" and string.format("%s: %s", config.search_label, domain) or config.flatten_label
+	end
+
+	local text = search
+	if active_filter then
+		local filtered = string.format("%s: %s", config.filter_label, tostring(active_filter))
+		text = search == "" and filtered or string.format("%s, %s", search, filtered)
+	elseif text == "" then
+		text = config.no_filter_label
+	end
+
+	return { { text, config.fg } }
 end
 
 --- Gets the number of selected and yanked files and also number of files or filtered files of the active tab.
