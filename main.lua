@@ -659,7 +659,7 @@ function Yatline.string.get:tab_path(trimmed, max_length, trim_length)
 
 	local t = {}
 	if cwd.spec.is_search then
-		t[#t + 1] = string.format("search: %s", cwd.domain)
+		t[#t + 1] = string.format("search: %s", cwd.spec.domain)
 	end
 	if filter then
 		t[#t + 1] = string.format("filter: %s", filter)
@@ -706,7 +706,7 @@ function Yatline.string.get:search_query(key)
 	local cwd = cx.active.current.cwd
 
 	if cwd.spec.is_search then
-		return string.format("%s %s", key, cwd.domain)
+		return string.format("%s %s", key, cwd.spec.domain)
 	else
 		return ""
 	end
@@ -1002,7 +1002,7 @@ function Yatline.coloreds.get:filter()
 
 	local search = ""
 	if cwd.spec.is_search then
-		local domain = tostring(cwd.domain or "")
+		local domain = tostring(cwd.spec.domain or "")
 		search = domain ~= "" and string.format("%s: %s", config.search_label, domain) or config.flatten_label
 	end
 
