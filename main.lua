@@ -1001,7 +1001,7 @@ function Yatline.coloreds.get:filter()
 	local config = Yatline.config.filter
 
 	local search = ""
-	if cwd.is_search then
+	if cwd.spec.is_search then
 		local domain = tostring(cwd.domain or "")
 		search = domain ~= "" and string.format("%s: %s", config.search_label, domain) or config.flatten_label
 	end
